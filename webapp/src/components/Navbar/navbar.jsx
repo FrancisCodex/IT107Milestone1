@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Logo from "../../assets/logo.svg"
+import Logo from "../../assets/cosmos.svg"
 import Logo2 from "../../assets/suitslogo1.png"
 
 

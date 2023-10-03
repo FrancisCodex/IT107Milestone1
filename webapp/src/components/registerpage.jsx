@@ -55,7 +55,7 @@ const Registerpage = () => {
     return <div>
 <div className="py-6 my-20 flex items-center justify-center min-h-screen">
     <div className="flex justify-center items-center bg-white rounded-lg shadow-lg overflow-hidden mx-auto max-w-sm lg:max-w-4xl">
-    <div className="hidden lg:block lg:w-1/2 bg-cover"><Image src={bgImage} alt='background'/></div>
+    <div className="hidden lg:block lg:w-1/2 bg-cover"><Image src={bgImage} alt='background' className="w-fit h-max"/></div>
             <div className="w-full p-8 lg:w-1/2">
                 <h2 className="text-2xl font-semibold text-gray-700 text-center">Suits.</h2>
                 <p className="text-xl text-gray-600 text-center">Welcome</p>

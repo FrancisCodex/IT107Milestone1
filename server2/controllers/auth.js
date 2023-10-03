@@ -1,4 +1,4 @@
-// controllers/authController.js // Import your User model
+
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const pool = require('../config/database')
@@ -14,7 +14,7 @@ dotenv.config();
 
 //random generation verification
 const generateVerificationToken = () => {
-  // Generate a random token here (you can use a library like `crypto` for this)
+  // Generate a random token here
   const verificationToken = crypto.randomBytes(32).toString('hex');
   return verificationToken;
 };
@@ -108,6 +108,40 @@ exports.register = async (req, res) => {
 
     // Handle other errors (e.g., validation errors) here
     res.status(422).json({ success: false, message: 'Validation failed' });
+  }
+};
+
+
+// RESET PASSWORD API CALL
+exports.resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    // Find the user with the matching reset token in the database
+    const user = await pool.query('SELECT * FROM cosmos.users WHERE reset_token = $1', [token]);
+
+    if (user.rows.length === 0) {
+      return res.status(404).json({ message: 'Invalid or expired token' });
+    }
+
+    const userRecord = user.rows[0];
+    // const currentTimestamp = Date.now();
+
+    // // Check if the reset token has expired
+    // if (userRecord.reset_token_expires < currentTimestamp) {
+    //   return res.status(401).json({ message: 'Token has expired' });
+    // }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the user's password and clear the reset token in the database
+    await pool.query('UPDATE cosmos.users SET password = $1, reset_token = null WHERE user_id = $2', [hashedPassword, userRecord.user_id]);
+
+    res.status(200).json({ message: 'Password reset successful' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

@@ -49,7 +49,7 @@ const Loginpage = () => {
     const imagebg = 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=820&q=80'; 
     return <div>
 <div className="py-6 my-20 flex items-center justify-center min-h-screen">
-  <div className="flex justify-center items-center bg-white rounded-lg shadow-lg overflow-hidden mx-auto max-w-sm lg:max-w-4xl">
+        <div className="flex justify-center items-center bg-white rounded-lg shadow-lg overflow-hidden mx-auto max-w-sm lg:max-w-4xl">
     <div className="hidden lg:block lg:w-1/2"><Image src={MyBackgroundImage} className="w-fit h-max" alt="background"/></div>
         <div className="w-full p-8 lg:w-1/2">
             <h2 className="text-2xl font-semibold text-gray-700 text-center">Suits</h2>
@@ -85,7 +85,7 @@ const Loginpage = () => {
             <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
               Password
             </label>
-            <a href="#" className="text-xs text-gray-500">
+            <a href="/login/requestchangepass" className="text-xs text-gray-500">
               Forget Password?
             </a>
           </div>
