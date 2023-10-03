@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const pool = require('../config/database')
 const dotenv = require('dotenv');
 const cookie = require('cookie');
+const sendVerificationEmail = require('../helpers/email');
+const crypto = require('crypto');
 
 
 dotenv.config();
@@ -73,57 +75,63 @@ exports.login = async (req, res) => {
 
 
 exports.register = async (req, res) => {
-  const { name, user_email, password } = req.body;
+  const { name, email, password } = req.body;
 
   try {
     // Check if the email already exists in the database
-    const existingUser = await pool.query('SELECT * FROM cosmos.users WHERE user_email = $1', [user_email]);
+    const existingUser = await pool.query('SELECT * FROM cosmos.users WHERE user_email = $1', [email]);
 
     if (existingUser.rows.length > 0) {
-      return res.status(400).json({ message: 'Email already exists' });
+      // Email already exists, return a 400 Bad Request response
+      return res.status(400).json({ success: false, message: 'Email already exists' });
     }
 
     // Hash the password before storing it in the database
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate a verification token for the user
+    // Generate a verification token
     const verificationToken = generateVerificationToken();
 
-    // Insert the new user into the database along with the verification token
-    await pool.query(
-      'INSERT INTO cosmos.users (name, user_email, password, verification_token) VALUES ($1, $2, $3, $4)',
-      [name, user_email, hashedPassword, verificationToken]
+    // Insert the new user into the database with verification token
+    const newUser = await pool.query(
+      'INSERT INTO cosmos.users (name, user_email, password, verification_token) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, email, hashedPassword, verificationToken]
     );
 
-    // Send the verification email (implement this function)
-    sendVerificationEmail(user_email, verificationToken);
+    // Send a verification email to the user
+    sendVerificationEmail(email, verificationToken);
 
-    res.status(201).json({ message: 'User registered successfully' });
+    // Send a successful registration response
+    res.status(201).json({ success: true, message: 'User registered successfully' });
+  } catch (error) {
+    console.error('Registration error:', error);
+
+    // Handle other errors (e.g., validation errors) here
+    res.status(422).json({ success: false, message: 'Validation failed' });
+  }
+};
+
+// Verify a user's email
+exports.verify = async (req, res) => {
+  const { token } = req.query;
+
+  try {
+    // Find the user with the matching verification token in the database
+    const user = await pool.query('SELECT * FROM cosmos.users WHERE verification_token = $1', [token]);
+
+    if (user.rows.length === 0) {
+      return res.status(404).json({ message: 'Invalid or expired token' });
+    }
+
+    // Mark the user's account as verified
+    await pool.query('UPDATE cosmos.users SET is_verified = true, verification_token = null WHERE user_id = $1', [user.rows[0].user_id]);
+
+    res.status(200).json({ message: 'Account verified successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-exports.verify = async (req, res) => {
-    const { token } = req.query;
-  
-    try {
-      // Find the user with the matching token in the database
-      const user = await pool.query('SELECT * FROM cosmos.users WHERE verification_token = $1', [token]);
-  
-      if (user.rows.length === 0) {
-        return res.status(404).json({ message: 'Invalid or expired token' });
-      }
-  
-      // Mark the user's account as verified
-      await pool.query('UPDATE cosmos.users SET is_verified = true WHERE id = $1', [user.rows[0].id]);
-  
-      res.status(200).json({ message: 'Account verified successfully' });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  };
 
 
